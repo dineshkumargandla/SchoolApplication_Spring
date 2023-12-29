@@ -1,6 +1,8 @@
 package io.dinesh.spring.app.schoolApplication.rest;
 
+import io.dinesh.spring.app.schoolApplication.Exceptions.StudentNotFoundException;
 import io.dinesh.spring.app.schoolApplication.Helper.FakeDataGenerator;
+import io.dinesh.spring.app.schoolApplication.constants.CustomMessages;
 import io.dinesh.spring.app.schoolApplication.entity.Student;
 import io.dinesh.spring.app.schoolApplication.service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,15 +19,11 @@ public class StudentController {
     StudentService studentService;
 
     @Autowired
-    FakeDataGenerator fakeDataGenerator;
+    CustomMessages customMessages;
 
     @GetMapping("/studentDetails")
-    public Student getStudentById(@RequestParam int id) {
-        Student theStudent = studentService.getStudentDetailsById(id);
-        if (theStudent == null) {
-            throw new RuntimeException("Employee id not found - " + id);
-        }
-        return theStudent;
+    public Student getStudentById(@RequestParam int id) throws StudentNotFoundException {
+        return studentService.getStudentDetailsById(id);
     }
 
     @GetMapping("/allStudentDetails")
@@ -33,21 +31,16 @@ public class StudentController {
         return studentService.getAllStudent();
     }
 
-//    @PostMapping("/addStudent")
-//    public Student addStudent(@RequestBody Student theStudent){
-//        return studentService.addStudent(theStudent);
-//    }
-
     @PostMapping("/addDummyStudent")
     public ResponseEntity<Student> addStudent() {
-         Student student = studentService.addDummyStudent();
-         return new ResponseEntity<>(new Student(student.getFirstName(),student.getLastName(), student.getEmail()),HttpStatus.CREATED);
+        Student student = studentService.addDummyStudent();
+        return new ResponseEntity<>(new Student(student.getFirstName(), student.getLastName(), student.getEmail(), 1), HttpStatus.CREATED);
     }
 
     @PostMapping("/addDummyStudents")
     public ResponseEntity<String> addStudent(@RequestParam int count) {
-         studentService.addDummyStudents(count);
-        return new ResponseEntity<>("Number of Dummy Students created are " +count,HttpStatus.CREATED);
+        studentService.addDummyStudents(count);
+        return new ResponseEntity<>(customMessages.DUMMY_STUDENT_CREATION + count, HttpStatus.CREATED);
     }
 
     @GetMapping("/getStudentsBasedOnLastName")
@@ -59,4 +52,41 @@ public class StudentController {
     public List<Student> getStudentsBasedOnFirstName(@RequestParam String firstName) {
         return studentService.getDetailsBasedOnFirstName(firstName);
     }
+
+    @PutMapping("/student/{id}")
+    public ResponseEntity<Student> UpdateStudentDetails(@PathVariable int id, @RequestBody Student studentInfo) {
+        studentInfo.setId(id);
+        studentService.saveStudent(studentInfo);
+        return new ResponseEntity<>(studentInfo, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/student")
+    public ResponseEntity<Student> addStudentDetails(@RequestBody Student studentInfo) {
+        studentInfo.setId(0);
+        studentService.saveStudent(studentInfo);
+        return new ResponseEntity<>(new Student(studentInfo.getFirstName(), studentInfo.getLastName(), studentInfo.getEmail(), 1), HttpStatus.CREATED);
+    }
+
+
+    @DeleteMapping("/student/{id}")
+    public ResponseEntity<String> deleteStudentDetails(@PathVariable int id, @RequestParam(required = false, defaultValue = "false") boolean permanentDelete) throws StudentNotFoundException {
+        Student studentInfo = studentService.getStudentDetailsById(id);
+        if (permanentDelete) {
+            studentService.deleteStudent(studentInfo.getId());
+        } else {
+            studentInfo.setFlag(0);
+            studentService.saveStudent(studentInfo);
+        }
+        return new ResponseEntity<>(customMessages.DELETE_STUDENT_MESSAGE+id, HttpStatus.ACCEPTED);
+    }
+
+    @PostMapping("/restoreStudent/{id}")
+    public ResponseEntity<String> restoreStudentDetails(@PathVariable int id) throws StudentNotFoundException {
+        Student studentInfo = studentService.getStudentDetails(id);
+        studentInfo.setFlag(1);
+        studentService.restoreStudent(studentInfo);
+        return  new ResponseEntity<>(customMessages.RESTORE_STUDENT+id, HttpStatus.ACCEPTED);
+    }
 }
+
+

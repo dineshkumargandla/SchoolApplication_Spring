@@ -23,13 +23,17 @@ public class Student {
     @Column(name="email")
     private String email;
 
+    @Column(name="flag")
+    private int flag;
+
     public Student() {
     }
 
-    public Student(String firstName, String lastName, String email) {
+    public Student(String firstName, String lastName, String email,int flag) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
+        this.flag = flag;
     }
 
     @Override
