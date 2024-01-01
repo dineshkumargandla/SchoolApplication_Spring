@@ -19,10 +19,10 @@ public interface StudentService {
 
     List<Student> getDetailsBasedOnFirstName(String firstName);
 
-    Student saveStudent(Student studentInfo);
+    void saveStudent(Student studentInfo);
 
     void deleteStudent(int id);
 
-    Student restoreStudent(Student student);
+    void restoreStudent(Student student);
 
 }

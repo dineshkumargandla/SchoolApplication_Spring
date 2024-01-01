@@ -5,6 +5,7 @@ import io.dinesh.spring.app.schoolApplication.Helper.FakeDataGenerator;
 import io.dinesh.spring.app.schoolApplication.constants.CustomMessages;
 import io.dinesh.spring.app.schoolApplication.dao.StudentRepository;
 import io.dinesh.spring.app.schoolApplication.entity.Student;
+import io.dinesh.spring.app.schoolApplication.service.FakeData;
 import io.dinesh.spring.app.schoolApplication.service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,32 +13,34 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class StudentImpl implements StudentService {
-    public StudentImpl(EntityManager studentEntityManager) {
-        this.studentEntityManager = studentEntityManager;
-    }
+
+    DateTimeFormatter formatter  = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+    LocalDateTime now = LocalDateTime.now();
 
     @Autowired
-    public StudentImpl(StudentRepository studentRepository) {
+    public StudentImpl(StudentRepository studentRepository,EntityManager studentEntityManager) {
         this.studentRepository = studentRepository;
+        this.studentEntityManager = studentEntityManager;
     }
 
     @Autowired
     CustomMessages customMessages;
 
-    private StudentRepository studentRepository;
-    public StudentImpl(FakeDataGenerator fakeDataGenerator) {
-        this.fakeDataGenerator = fakeDataGenerator;
+    @Autowired
+    FakeData fakeDataGenerator;
 
-    }
+    StudentRepository studentRepository;
 
     EntityManager studentEntityManager;
 
-    FakeDataGenerator fakeDataGenerator;
 
     @Override
     public Student getStudentDetailsById(int id) throws StudentNotFoundException {
@@ -48,7 +51,6 @@ public class StudentImpl implements StudentService {
             theStudent = student.get();
         }
         else {
-            // we didn't find the employee
             throw new StudentNotFoundException(customMessages.StudentNotFound + id);
         }
 
@@ -64,7 +66,6 @@ public class StudentImpl implements StudentService {
             theStudent = student.get();
         }
         else {
-            // we didn't find the employee
             throw new StudentNotFoundException(customMessages.StudentNotFound + studentId);
         }
 
@@ -73,16 +74,18 @@ public class StudentImpl implements StudentService {
 
     @Override
     public List<Student> getAllStudent() {
-        TypedQuery<Student> studentEntityTypedQuery = studentEntityManager.createQuery("From Student",Student.class);
-        return studentEntityTypedQuery.getResultList();
+        return studentRepository.findAll();
     }
 
 
     @Override
     @Transactional
     public Student addDummyStudent() {
-        Student student = new Student(fakeDataGenerator.getFakeFirstName(), fakeDataGenerator.getFakeLastName(), fakeDataGenerator.getFakeEmail(),1);
-        studentEntityManager.persist(student);
+        Student student = new Student(fakeDataGenerator.getFakeFirstName(), fakeDataGenerator.getFakeLastName(), fakeDataGenerator.getFakeEmail(), fakeDataGenerator.getFakeClassSection());
+        student.setId(0);
+        student.setFlag(1);
+        student.setJoinedDate(new Date(formatter.format(now)));
+        studentRepository.save(student);
         return student;
     }
 
@@ -91,8 +94,7 @@ public class StudentImpl implements StudentService {
         public void addDummyStudents(int count) {
         Student student;
         for(int i =1 ; i <=count;i++){
-            student =new Student(fakeDataGenerator.getFakeFirstName(), fakeDataGenerator.getFakeLastName(), fakeDataGenerator.getFakeEmail(),1);
-            studentEntityManager.persist(student);
+            addDummyStudent();
         }
     }
 
@@ -111,8 +113,8 @@ public class StudentImpl implements StudentService {
     }
 
     @Override
-    public Student saveStudent(Student studentInfo) {
-        return studentRepository.save(studentInfo);
+    public void saveStudent(Student studentInfo) {
+        studentRepository.save(studentInfo);
     }
 
     @Override
@@ -121,7 +123,7 @@ public class StudentImpl implements StudentService {
     }
 
     @Override
-    public Student restoreStudent(Student studentInfo) {
-        return studentRepository.save(studentInfo);
+    public void restoreStudent(Student studentInfo) {
+        studentRepository.save(studentInfo);
     }
 }

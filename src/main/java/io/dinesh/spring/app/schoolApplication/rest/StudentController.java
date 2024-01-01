@@ -10,6 +10,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -20,6 +23,9 @@ public class StudentController {
 
     @Autowired
     CustomMessages customMessages;
+
+    DateTimeFormatter formatter  = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+    LocalDateTime now = LocalDateTime.now();
 
     @GetMapping("/studentDetails")
     public Student getStudentById(@RequestParam int id) throws StudentNotFoundException {
@@ -34,7 +40,7 @@ public class StudentController {
     @PostMapping("/addDummyStudent")
     public ResponseEntity<Student> addStudent() {
         Student student = studentService.addDummyStudent();
-        return new ResponseEntity<>(new Student(student.getFirstName(), student.getLastName(), student.getEmail(), 1), HttpStatus.CREATED);
+        return new ResponseEntity<>(student, HttpStatus.CREATED);
     }
 
     @PostMapping("/addDummyStudents")
@@ -63,10 +69,11 @@ public class StudentController {
     @PostMapping("/student")
     public ResponseEntity<Student> addStudentDetails(@RequestBody Student studentInfo) {
         studentInfo.setId(0);
+        studentInfo.setFlag(1);
+        studentInfo.setJoinedDate(new Date(formatter.format(now)));
         studentService.saveStudent(studentInfo);
-        return new ResponseEntity<>(new Student(studentInfo.getFirstName(), studentInfo.getLastName(), studentInfo.getEmail(), 1), HttpStatus.CREATED);
+        return new ResponseEntity<>(studentInfo, HttpStatus.CREATED);
     }
-
 
     @DeleteMapping("/student/{id}")
     public ResponseEntity<String> deleteStudentDetails(@PathVariable int id, @RequestParam(required = false, defaultValue = "false") boolean permanentDelete) throws StudentNotFoundException {

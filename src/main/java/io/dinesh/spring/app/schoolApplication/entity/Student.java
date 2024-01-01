@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.util.Date;
 
 @Entity
 @Getter
@@ -26,23 +27,31 @@ public class Student {
     @Column(name="flag")
     private int flag;
 
+    @Column(name="class_section")
+    private String class_section;
+
+    @Column(name="joinedDate")
+    private Date joinedDate;
+
     public Student() {
     }
 
-    public Student(String firstName, String lastName, String email,int flag) {
+    public Student(String firstName, String lastName, String email,String class_Section) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
-        this.flag = flag;
+        this.class_section = class_Section;
     }
 
     @Override
     public String toString() {
-        return "StudentEntity{" +
+        return "Student{" +
                 "id=" + id +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +
+                ", class_section='" + class_section + '\'' +
+                ", joined_Date=" + joinedDate +
                 '}';
     }
 }
